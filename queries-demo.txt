@@ -1,0 +1,312 @@
+-- see the coresponding labels in ViewResult.txt for the content of the views
+-- if you see massing line-wrapping, you may want to expand the applicatoin window,
+-- we've omitted some columns that are not important, the things left here are all necessary
+
+-- ====== Population's affect on Housing Prices =======
+
+csc343h-huangba9=> -- Label: Population Housing 1
+csc343h-huangba9=> -- Total population in a county
+csc343h-huangba9=> DROP VIEW IF EXISTS CountyPopulation CASCADE;
+NOTICE:  drop cascades to 3 other objects
+DETAIL:  drop cascades to view populationandhousing
+drop cascades to view populationhousingrounded
+drop cascades to view populationhousingavg
+DROP VIEW
+csc343h-huangba9=> CREATE VIEW CountyPopulation (county, total_population) AS
+csc343h-huangba9->  SELECT county, SUM(population) as total_population
+csc343h-huangba9->  FROM CityInfo
+csc343h-huangba9->  GROUP BY county;
+CREATE VIEW
+csc343h-huangba9=> 
+csc343h-huangba9=> -- Label: Population Housing 2
+csc343h-huangba9=> -- combine population with land area and housing info, sort it by increasing housing prices
+csc343h-huangba9=> DROP VIEW if exists PopulationAndHousing CASCADE;
+NOTICE:  view "populationandhousing" does not exist, skipping
+DROP VIEW
+csc343h-huangba9=> CREATE VIEW PopulationAndHousing (county, total_population, land_area, population_density, 
+csc343h-huangba9(>  median_house_prices) AS 
+csc343h-huangba9->  SELECT county, total_population, land_area, total_population/land_area AS population_density, 
+csc343h-huangba9->  median_house_prices
+csc343h-huangba9->  FROM CountyPopulation
+csc343h-huangba9->  NATURAL JOIN CountyLandArea
+csc343h-huangba9->  NATURAL JOIN CaliforniaHousing
+csc343h-huangba9->  ORDER BY median_house_prices;
+CREATE VIEW
+csc343h-huangba9=> 
+csc343h-huangba9=> -- Label: Population Housing 3
+csc343h-huangba9=> -- Add a column for rounded housing prices
+csc343h-huangba9=> DROP VIEW if exists PopulationHousingRounded CASCADE;
+NOTICE:  view "populationhousingrounded" does not exist, skipping
+DROP VIEW
+csc343h-huangba9=> CREATE VIEW PopulationHousingRounded (county, total_population, land_area, population_density, 
+csc343h-huangba9(>  median_house_prices, rounded_house_price) AS 
+csc343h-huangba9->  SELECT county, total_population, land_area, population_density, median_house_prices, 
+csc343h-huangba9->  round(median_house_prices, -5) AS rounded_house_price
+csc343h-huangba9->  FROM PopulationAndHousing;
+CREATE VIEW
+csc343h-huangba9=> 
+csc343h-huangba9=> -- Label: Population Housing 4
+csc343h-huangba9=> -- Get the average population density
+csc343h-huangba9=> DROP VIEW if exists PopulationHousingAvg CASCADE;
+NOTICE:  view "populationhousingavg" does not exist, skipping
+DROP VIEW
+csc343h-huangba9=> CREATE VIEW PopulationHousingAvg (avg_population_density, rounded_house_price, counties) AS 
+csc343h-huangba9->  SELECT AVG(population_density) as avg_population_density, rounded_house_price,
+csc343h-huangba9->  array_agg(county) AS counties
+csc343h-huangba9->  FROM PopulationHousingRounded
+csc343h-huangba9->  GROUP BY rounded_house_price
+csc343h-huangba9->  ORDER BY rounded_house_price;
+CREATE VIEW
+csc343h-huangba9=> 
+csc343h-huangba9=> -- Label: Population Housing 5
+csc343h-huangba9=> -- Seeing the final results of population on Housing
+csc343h-huangba9=> select * from PopulationHousingAvg;
+ avg_population_density | rounded_house_price |                                     counties                                      
+------------------------+---------------------+-----------------------------------------------------------------------------------
+      0.721583962305087 |              100000 | {Modoc}
+       25.5589562667156 |              200000 | {Sierra,Lassen,Siskiyou,Tehama,"Del Norte",Imperial,Tulare,Glenn,Kern,Kings,Pluma.
+                        |                     |.s}
+       55.0675095740145 |              300000 | {Lake,Colusa,Merced,Inyo,Shasta,Fresno,Madera,Tuolumne,Yuba,Butte,Amador,Calavera.
+                        |                     |.s,Stanislaus,Sutter,Humboldt}
+       252.262486426858 |              400000 | {"San Bernardino","San Joaquin",Riverside,Sacramento,Mendocino}
+       141.514668581585 |              500000 | {Solano,Yolo,Nevada,"San Benito","El Dorado",Placer}
+       566.644644217129 |              600000 | {Monterey,"San Luis Obispo","San Diego",Ventura,"Santa Barbara","Los Angeles"}
+       1200.90842694776 |              700000 | {"Contra Costa",Sonoma,Napa,Orange}
+       1075.21017218781 |              800000 | {Alameda,"Santa Cruz"}
+       780.101662806241 |             1100000 | {Marin,"Santa Clara"}
+       9290.40628403038 |             1200000 | {"San Francisco","San Mateo"}
+(10 rows)
+
+
+
+
+
+
+
+-- ====== Crimes's affect on Housing Prices =======
+
+
+csc343h-huangba9=> -- Label: Crime Housing 1
+csc343h-huangba9=> -- Crime rates and housing, have them in order(increasing house prices)
+csc343h-huangba9=> DROP VIEW if exists CrimeAndHousing CASCADE;
+NOTICE:  drop cascades to 2 other objects
+DETAIL:  drop cascades to view crimehousingrounded
+drop cascades to view avgcrimehousing
+DROP VIEW
+csc343h-huangba9=> CREATE VIEW CrimeAndHousing (county, median_house_prices,violent_crimes,property_crimes) AS
+csc343h-huangba9->  SELECT county, median_house_prices, violent AS violent_crimes, property AS property_crimes
+csc343h-huangba9->  FROM CrimeCounts 
+csc343h-huangba9->  NATURAL JOIN CaliforniaHousing
+csc343h-huangba9->  ORDER BY median_house_prices;
+CREATE VIEW
+csc343h-huangba9=> 
+csc343h-huangba9=> -- Label: Crime Housing 2
+csc343h-huangba9=> -- Round the median house prices and put them in a new column
+csc343h-huangba9=> DROP VIEW if exists CrimeHousingRounded CASCADE;
+NOTICE:  view "crimehousingrounded" does not exist, skipping
+DROP VIEW
+csc343h-huangba9=> CREATE VIEW CrimeHousingRounded (county, median_house_prices,violent_crimes,property_crimes,
+csc343h-huangba9(>  rounded_house_price) AS
+csc343h-huangba9->  SELECT county, median_house_prices, violent_crimes,property_crimes , 
+csc343h-huangba9->  round(median_house_prices, -5) AS rounded_house_price
+csc343h-huangba9->  FROM CrimeAndHousing;
+CREATE VIEW
+csc343h-huangba9=> 
+csc343h-huangba9=> -- Label: Crime Housing 3
+csc343h-huangba9=> -- Group by roundedHousePrice and see their average violent and property crimes
+csc343h-huangba9=> DROP VIEW if exists AvgCrimeHousing CASCADE;
+NOTICE:  view "avgcrimehousing" does not exist, skipping
+DROP VIEW
+csc343h-huangba9=> CREATE VIEW AvgCrimeHousing ( avg_violent_crimes, avg_property_crimes,rounded_house_price,counties) AS
+csc343h-huangba9->  SELECT  AVG(violent_crimes) as avg_violent_crimes, 
+csc343h-huangba9->  AVG(property_crimes ) as avg_property_crimes, rounded_house_price,
+csc343h-huangba9->  array_agg(county) AS counties
+csc343h-huangba9->  FROM CrimeHousingRounded
+csc343h-huangba9->  GROUP BY rounded_house_price
+csc343h-huangba9->  ORDER BY rounded_house_price;
+CREATE VIEW
+csc343h-huangba9=> 
+csc343h-huangba9=> -- Label: Crime Housing 4
+csc343h-huangba9=> select * from AvgCrimeHousing;
+ avg_violent_crimes | avg_property_crimes | rounded_house_price |                            counties                             
+--------------------+---------------------+---------------------+-----------------------------------------------------------------
+              609.2 |              1880.1 |              100000 | {Modoc}
+   483.027272727273 |    2141.67272727273 |              200000 | {Sierra,Lassen,Siskiyou,Tehama,"Del Norte",Imperial,Tulare,Glen.
+                    |                     |                     |.n,Kern,Kings,Plumas}
+   495.844444444444 |    2407.06666666667 |              300000 | {Lake,Colusa,Merced,Inyo,Shasta,Fresno,Mariposa,Madera,Tuolumne.
+                    |                     |                     |.,Yuba,Trinity,Butte,Amador,Calaveras,Stanislaus,Sutter,Mono,Hum.
+                    |                     |                     |.boldt}
+   623.933333333333 |    2422.76666666667 |              400000 | {"San Bernardino",Alpine,"San Joaquin",Riverside,Sacramento,Men.
+                    |                     |                     |.docino}
+              280.3 |             1911.55 |              500000 | {Solano,Yolo,Nevada,"San Benito","El Dorado",Placer}
+   371.616666666667 |    2049.26666666667 |              600000 | {Monterey,"San Luis Obispo","San Diego",Ventura,"Santa Barbara".
+                    |                     |                     |.,"Los Angeles"}
+             349.55 |            1935.025 |              700000 | {"Contra Costa",Sonoma,Napa,Orange}
+             491.55 |              3552.4 |              800000 | {Alameda,"Santa Cruz"}
+              242.3 |              2108.7 |             1100000 | {Marin,"Santa Clara"}
+              488.8 |             4117.45 |             1200000 | {"San Francisco","San Mateo"}
+(10 rows)
+
+csc343h-huangba9=> 
+csc343h-huangba9=> -- Label: Crime Housing 5
+csc343h-huangba9=> -- Looking at the enforcement employees working for the safety of their citzens:
+csc343h-huangba9=> DROP VIEW if exists EnforcementInCountyHousing CASCADE;
+DROP VIEW
+csc343h-huangba9=> CREATE VIEW EnforcementInCountyHousing (county, median_house_prices,enforce_employees,
+csc343h-huangba9(>  total_officers, total_civilians) AS
+csc343h-huangba9->  SELECT county, median_house_prices,enforce_employees,total_officers, total_civilians
+csc343h-huangba9->  FROM CrimesInCounty 
+csc343h-huangba9->  NATURAL JOIN CaliforniaHousing
+csc343h-huangba9->  ORDER BY median_house_prices;
+CREATE VIEW
+csc343h-huangba9=> 
+csc343h-huangba9=> -- Label: Crime Housing 6
+csc343h-huangba9=> -- Again rounding the housing prices
+csc343h-huangba9=> DROP VIEW if exists EnforcementInCountyHousingRounded CASCADE;
+NOTICE:  drop cascades to view avgenforcementhousing
+DROP VIEW
+csc343h-huangba9=> CREATE VIEW EnforcementInCountyHousingRounded (county, median_house_prices,enforce_employees,
+csc343h-huangba9(>  total_officers, total_civilians, rounded_house_price) AS
+csc343h-huangba9->  SELECT county, median_house_prices,enforce_employees,total_officers, total_civilians, 
+csc343h-huangba9->  round(median_house_prices, -5) AS rounded_house_price
+csc343h-huangba9->  FROM EnforcementInCountyHousing;
+CREATE VIEW
+csc343h-huangba9=> 
+csc343h-huangba9=> -- Label: Crime Housing 7
+csc343h-huangba9=> -- Group by rounded prices and observe the avg num of employees across those counties with 
+csc343h-huangba9=> -- the same average housing prices.
+csc343h-huangba9=> DROP VIEW if exists AvgEnforcementHousing CASCADE;
+NOTICE:  view "avgenforcementhousing" does not exist, skipping
+DROP VIEW
+csc343h-huangba9=> CREATE VIEW AvgEnforcementHousing (counties,enforce_employees,
+csc343h-huangba9(>  total_officers, total_civilians, rounded_house_price) AS
+csc343h-huangba9->  SELECT array_agg(county) AS counties,avg(enforce_employees) as avg_enf_emp,
+csc343h-huangba9->  avg(total_officers) as avg_total_officers, avg(total_civilians) as avg_total_civilians, 
+csc343h-huangba9->  rounded_house_price
+csc343h-huangba9->  FROM EnforcementInCountyHousingRounded
+csc343h-huangba9->  GROUP BY rounded_house_price
+csc343h-huangba9->  ORDER BY rounded_house_price;
+CREATE VIEW
+csc343h-huangba9=> 
+csc343h-huangba9=> -- Label: Crime Housing 8
+csc343h-huangba9=> select * from AvgEnforcementHousing;
+              counties              |   enforce_employees   |    total_officers     |    total_civilians    | rounded_house_price 
+------------------------------------+-----------------------+-----------------------+-----------------------+---------------------
+ {Modoc}                            |   23.0000000000000000 |   14.0000000000000000 |    9.0000000000000000 |              100000
+ {Sierra,Lassen,Siskiyou,Tehama,"De.|  270.9090909090909091 |  180.5454545454545455 |   90.3636363636363636 |              200000
+.l Norte",Imperial,Tulare,Glenn,Ker.|                       |                       |                       | 
+.n,Kings,Plumas}                    |                       |                       |                       | 
+ {Lake,Colusa,Merced,Inyo,Shasta,Fr.|  205.5000000000000000 |  113.5555555555555556 |   91.9444444444444444 |              300000
+.esno,Mariposa,Madera,Tuolumne,Yuba.|                       |                       |                       | 
+.,Trinity,Butte,Amador,Calaveras,St.|                       |                       |                       | 
+.anislaus,Sutter,Humboldt,Mono}     |                       |                       |                       | 
+ {"San Bernardino",Alpine,"San Joaq.| 1686.8333333333333333 |  922.0000000000000000 |  764.8333333333333333 |              400000
+.uin",Riverside,Sacramento,Mendocin.|                       |                       |                       | 
+.o}                                 |                       |                       |                       | 
+ {Solano,Yolo,Nevada,"San Benito",".|  295.1666666666666667 |  115.8333333333333333 |  179.3333333333333333 |              500000
+.El Dorado",Placer}                 |                       |                       |                       | 
+ {Monterey,"San Luis Obispo","San D.| 3891.5000000000000000 | 2241.8333333333333333 | 1649.6666666666666667 |              600000
+.iego",Ventura,"Santa Barbara","Los.|                       |                       |                       | 
+. Angeles"}                         |                       |                       |                       | 
+ {"Contra Costa",Sonoma,Napa,Orange.| 1315.7500000000000000 |  680.5000000000000000 |  635.2500000000000000 |              700000
+.}                                  |                       |                       |                       | 
+ {Alameda,"Santa Cruz"}             |  929.5000000000000000 |  560.5000000000000000 |  369.0000000000000000 |              800000
+ {Marin,"Santa Clara"}              |  953.0000000000000000 |  700.0000000000000000 |  253.0000000000000000 |             1100000
+ {"San Francisco","San Mateo"}      |  811.0000000000000000 |  557.5000000000000000 |  253.5000000000000000 |             1200000
+(10 rows)
+
+
+
+
+
+
+-- ======= Housing Price and Air quality demo =======
+
+-- Label: AirQuality 1 (see ViewResult.txt, label AirQuality1 for the content of this view)
+csc343h-sagaway1=> DROP VIEW IF EXISTS CountyAirQuality CASCADE;
+NOTICE:  drop cascades to 2 other objects
+DETAIL:  drop cascades to view countywildfireair
+drop cascades to view countyhousingwrtair
+DROP VIEW
+csc343h-sagaway1=> create view CountyAirQuality as 
+csc343h-sagaway1-> select county, avg(finePMMean) as avgPM, avg(dailyAQI) as avgAQI
+csc343h-sagaway1-> from AirQuality 
+csc343h-sagaway1-> group by county
+csc343h-sagaway1-> order by (avgAQI);
+CREATE VIEW
+
+
+-- Label: AirQuality 2 (see ViewResult.txt, label AirQuality2 for the content of this view)
+csc343h-sagaway1=> DROP VIEW IF EXISTS CountyWildfireDamage CASCADE;
+DROP VIEW
+csc343h-sagaway1=> create view CountyWildfireDamage as 
+csc343h-sagaway1-> select county, count(name) as numWildfire, 
+csc343h-sagaway1->  avg(acresAffected) as avgAcresAffected,
+csc343h-sagaway1->  avg(injuries) as avgInjuries,
+csc343h-sagaway1->  cast(sum(injuries) as decimal) / cast(sum(acresAffected) as decimal)
+csc343h-sagaway1->  as injPerAcre
+csc343h-sagaway1-> from Wildfire 
+csc343h-sagaway1-> group by county
+csc343h-sagaway1-> order by (avgAcresAffected);
+CREATE VIEW
+
+
+-- Label: AirQuality 3 (see viewResult.txt, label AirQuality3 for the content of this view)
+csc343h-sagaway1=> DROP VIEW IF EXISTS CountyWildfireAir CASCADE;
+NOTICE:  view "countywildfireair" does not exist, skipping
+DROP VIEW
+csc343h-sagaway1=> create view CountyWildfireAir as 
+csc343h-sagaway1-> select county, numWildfire, avgAcresAffected, 
+csc343h-sagaway1->  avgInjuries, avgPM, avgAQI
+csc343h-sagaway1-> from CountyAirQuality join CountyWildfireDamage using(county)
+csc343h-sagaway1-> order by avgAQI;
+CREATE VIEW
+
+-- Label: AirQuality 4 
+csc343h-sagaway1=> select * 
+csc343h-sagaway1-> from CountyWildfireAir
+csc343h-sagaway1-> order by avgAQI
+csc343h-sagaway1-> limit 5;
+  county   | numwildfire |   avgacresaffected    |      avginjuries       |      avgpm       |       avgaqi        
+-----------+-------------+-----------------------+------------------------+------------------+---------------------
+ El Dorado |          28 | 3900.9642857142857143 |     7.5000000000000000 | 2.66363636363636 | 11.2727272727272727
+ Lake      |          37 | 3211.6756756756756757 | 1.00000000000000000000 | 3.46666666666667 | 14.6000000000000000
+ Shasta    |          41 |    10820.243902439024 |     5.7500000000000000 | 5.05384615384615 | 19.7307692307692308
+ Trinity   |          15 |    11612.600000000000 |     2.0000000000000000 | 4.92228571428572 | 20.0514285714285714
+ Siskiyou  |          47 | 7223.3829787234042553 |     2.0000000000000000 | 5.62134387351779 | 20.8458498023715415
+(5 rows)
+
+
+-- Label: AirQuality 5
+csc343h-sagaway1=> select avg(avgAQI) as avgCaliforniaAQI 
+csc343h-sagaway1-> from CountyWildfireAir;
+  avgcaliforniaaqi   
+---------------------
+ 32.4798636352001050
+(1 row)
+
+
+-- Label: AirQuality 6 (see viewResult.txt, label AirQuality6 for the content of this view)
+csc343h-sagaway1=> DROP VIEW IF EXISTS CountyHousingWrtAir CASCADE;
+NOTICE:  view "countyhousingwrtair" does not exist, skipping
+DROP VIEW
+csc343h-sagaway1=> create view CountyHousingWrtAir as
+csc343h-sagaway1-> select county, median_house_prices as medianHousePrices, numWildfire, 
+csc343h-sagaway1->  avgAcresAffected, avgAQI
+csc343h-sagaway1-> from CaliforniaHousing join CountyWildfireAir using(county)
+csc343h-sagaway1-> order by medianHousePrices DESC;
+CREATE VIEW
+
+
+-- Label: AirQuality 7
+csc343h-sagaway1=> select * from CountyHousingWrtAir
+csc343h-sagaway1-> order by medianHousePrices DESC
+csc343h-sagaway1-> limit 5;
+   county    | medianhouseprices | numwildfire |   avgacresaffected   |       avgaqi        
+-------------+-------------------+-------------+----------------------+---------------------
+ San Mateo   |           1195477 |           3 |  51.0000000000000000 | 30.3003952569169960
+ Santa Clara |           1089740 |          23 | 272.9130434782608696 | 31.1023622047244094
+ Marin       |           1059218 |           3 |  84.6666666666666667 | 27.2753036437246964
+ Santa Cruz  |            834259 |           2 | 200.5000000000000000 | 26.7322834645669291
+ Alameda     |            832582 |          17 | 254.8235294117647059 | 30.0237154150197628
+(5 rows)

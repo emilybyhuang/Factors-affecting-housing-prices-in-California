@@ -1,0 +1,189 @@
+\i schema.ddl 
+
+\COPY CaliforniaCities from californiacities.csv with csv delimiter ',' header;
+\COPY countylandarea from countylandarea.csv with csv delimiter ',' header;
+\COPY CityInfo from cities.csv with csv delimiter ',' header;  
+\COPY crimesincounty from crimeincounties.csv with csv delimiter ',' header;  
+\COPY crimecounts from crimecounts.csv with csv delimiter ',' header;  
+\COPY airquality from airquality.csv with csv delimiter ',' header;  
+\COPY wildfire from wildfire.csv with csv delimiter ',' header;  
+\COPY californiahousing from californiahousing.csv with csv delimiter ',' header;
+
+SELECT COUNT(*) from airquality;  
+SELECT COUNT(*) from CityInfo;  
+SELECT COUNT(*) from crimecounts;  
+SELECT COUNT(*) from crimesincounty;  
+SELECT COUNT(*) from wildfire;  
+SELECT COUNT(*) from californiahousing; 
+SELECT COUNT(*) from countylandarea;  
+SELECT COUNT(*) from californiacities; 
+
+SELECT * from airquality Where finepmmean = 4.5 and date = '2001-02-20';  
+SELECT * from CityInfo where cityname = 'Anderson';  
+SELECT * from crimecounts where county = 'Alameda';  
+SELECT * from crimesincounty where county = 'Alameda';  
+SELECT * from californiahousing where county = 'Alameda';  
+SELECT * from wildfire where name = 'Rim Fire';  
+SELECT * from countylandarea where county = 'Orange'; 
+SELECT * from californiacities where cityname = 'Anderson';
+
+outputs:
+csc343h-huangba9=> \i schema.ddl 
+psql:schema.ddl:5: NOTICE:  drop cascades to 12 other objects
+DETAIL:  drop cascades to type houseprices.lon
+drop cascades to type houseprices.lat
+drop cascades to type houseprices.pop
+drop cascades to type houseprices.rates
+drop cascades to table houseprices.californiacities
+drop cascades to table houseprices.countylandarea
+drop cascades to table houseprices.cityinfo
+drop cascades to table houseprices.californiahousing
+drop cascades to table houseprices.crimesincounty
+drop cascades to table houseprices.crimecounts
+drop cascades to table houseprices.airquality
+drop cascades to table houseprices.wildfire
+DROP SCHEMA
+CREATE SCHEMA
+SET
+CREATE DOMAIN
+CREATE DOMAIN
+CREATE DOMAIN
+CREATE DOMAIN
+psql:schema.ddl:27: NOTICE:  table "californiacities" does not exist, skipping
+DROP TABLE
+CREATE TABLE
+psql:schema.ddl:39: NOTICE:  table "countylandarea" does not exist, skipping
+DROP TABLE
+CREATE TABLE
+psql:schema.ddl:51: NOTICE:  table "cityinfo" does not exist, skipping
+DROP TABLE
+CREATE TABLE
+psql:schema.ddl:65: NOTICE:  table "californiahousing" does not exist, skipping
+DROP TABLE
+CREATE TABLE
+psql:schema.ddl:77: NOTICE:  table "crimesincounty" does not exist, skipping
+DROP TABLE
+CREATE TABLE
+psql:schema.ddl:91: NOTICE:  table "crimecounts" does not exist, skipping
+DROP TABLE
+CREATE TABLE
+psql:schema.ddl:119: NOTICE:  table "airquality" does not exist, skipping
+DROP TABLE
+CREATE TABLE
+psql:schema.ddl:134: NOTICE:  table "wildfire" does not exist, skipping
+DROP TABLE
+CREATE TABLE
+csc343h-huangba9=> 
+csc343h-huangba9=> \COPY CaliforniaCities from californiacities.csv with csv delimiter ',' header;
+COPY 482
+csc343h-huangba9=> \COPY countylandarea from countylandarea.csv with csv delimiter ',' header;
+COPY 58
+csc343h-huangba9=> \COPY CityInfo from cities.csv with csv delimiter ',' header;  
+COPY 433
+csc343h-huangba9=> \COPY crimesincounty from crimeincounties.csv with csv delimiter ',' header;  
+COPY 58
+csc343h-huangba9=> \COPY crimecounts from crimecounts.csv with csv delimiter ',' header;  
+COPY 58
+csc343h-huangba9=> \COPY airquality from airquality.csv with csv delimiter ',' header;  
+erson';  
+SELECT * from crimecounts where county = 'Alameda';  
+SELECT * from crimesincounty where county = 'Alameda';  
+SELECT * from californiahousing where county = 'Alameda';  
+SELECT * from wildfire where name = 'Rim Fire';  
+SELECT * from countylandarea where county = 'Orange'; 
+SELECT * from californiacities where cityname = 'Anderson';COPY 11218
+csc343h-huangba9=> \COPY wildfire from wildfire.csv with csv delimiter ',' header;  
+COPY 1191
+csc343h-huangba9=> \COPY californiahousing from californiahousing.csv with csv delimiter ',' header;
+COPY 58
+csc343h-huangba9=> 
+csc343h-huangba9=> SELECT COUNT(*) from airquality;  
+ count 
+-------
+ 11218
+(1 row)
+
+csc343h-huangba9=> SELECT COUNT(*) from CityInfo;  
+ count 
+-------
+   433
+(1 row)
+
+csc343h-huangba9=> SELECT COUNT(*) from crimecounts;  
+ count 
+-------
+    58
+(1 row)
+
+csc343h-huangba9=> SELECT COUNT(*) from crimesincounty;  
+ count 
+-------
+    58
+(1 row)
+
+csc343h-huangba9=> SELECT COUNT(*) from wildfire;  
+ count 
+-------
+  1191
+(1 row)
+
+csc343h-huangba9=> SELECT COUNT(*) from californiahousing; 
+ count 
+-------
+    58
+(1 row)
+
+csc343h-huangba9=> SELECT COUNT(*) from countylandarea;  
+ count 
+-------
+    58
+(1 row)
+
+csc343h-huangba9=> SELECT COUNT(*) from californiacities; 
+ count 
+-------
+   482
+(1 row)
+
+csc343h-huangba9=> 
+csc343h-huangba9=> SELECT * from airquality Where finepmmean = 4.5 and date = '2001-02-20';  
+ county  |    date    | finepmmean | dailyaqi 
+---------+------------+------------+----------
+ Alameda | 2001-02-20 |        4.5 |       19
+(1 row)
+
+csc343h-huangba9=> SELECT * from CityInfo where cityname = 'Anderson';  
+ county | cityname | population | latitude  |  longitude  
+--------+----------+------------+-----------+-------------
+ Shasta | Anderson |       9932 | 40.448208 | -122.297783
+(1 row)
+
+csc343h-huangba9=> SELECT * from crimecounts where county = 'Alameda';  
+ county  | violent | murder | rape | robbery | aggrevated_assault | property | burglary | vehicle_theft | larceny_theft | total  
+---------+---------+--------+------+---------+--------------------+----------+----------+---------------+---------------+--------
+ Alameda |   601.1 |    5.5 | 49.1 |   291.8 |              254.8 |   3868.4 |    418.9 |         763.6 |        2685.9 | 4469.5
+(1 row)
+
+csc343h-huangba9=> SELECT * from crimesincounty where county = 'Alameda';  
+ county  | enforce_employees | total_officers | total_civilians 
+---------+-------------------+----------------+-----------------
+ Alameda |              1560 |            978 |             582
+(1 row)
+
+csc343h-huangba9=> SELECT * from californiahousing where county = 'Alameda';  
+ county  | median_house_prices_raw | median_house_prices 
+---------+-------------------------+---------------------
+ Alameda | $832582.00              |              832582
+(1 row)
+
+csc343h-huangba9=> SELECT * from wildfire where name = 'Rim Fire';  
+   name   |  county  | acresaffected | injuries 
+----------+----------+---------------+----------
+ Rim Fire | Tuolumne |        257314 |         
+(1 row)
+
+csc343h-huangba9=> SELECT * from countylandarea where county = 'Orange'; 
+ county_population_raw  | land_area_raw | county | land_area 
+------------------------+---------------+--------+-----------
+ Orange, CA / 3,086,331 | 790.57 sq mi  | Orange |    790.57
+(1 row)
